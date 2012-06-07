@@ -1,12 +1,12 @@
 var listeningPort = 80,
-	destinationHost = "localhost",
+	destinationHost = 'localhost',
 	destinationPort = 3000;
 
 var http = require('http'),
 	url = require('url');
 
 http.createServer(function(req, res) {
-	console.log("### Received request.\n-");
+	console.log('### Received request.\n-');
 
 	var method = req.method,
 		hostName = req.headers.host;
@@ -18,8 +18,7 @@ http.createServer(function(req, res) {
 		method: method
 	};
 
-	console.log("Options sent with request:");
-	console.log(options);
+	console.log('Options: ' + JSON.stringify(options));
 
 	var proxiedRequest = http.get(options, function(proxiedResponse) {
 		console.log('\nStatus Code: ' + res.statusCode);
@@ -27,13 +26,13 @@ http.createServer(function(req, res) {
 
 		proxiedResponse.setEncoding('utf8');
 
-		res.writeHead(res.statusCode, { 'Content-Type': proxiedResponse.headers["content-type"] });
+		res.writeHead(res.statusCode, { 'Content-Type': proxiedResponse.headers['content-type'] });
 
 		proxiedResponse.on('data', function(chunk) {
 			res.write(chunk);
 			res.end();
 	
-			console.log("-\n### Request has been handled.\n");
+			console.log('-\n### Request has been handled.\n');
 		});
 
 	});
