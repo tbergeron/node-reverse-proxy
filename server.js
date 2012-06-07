@@ -1,4 +1,6 @@
-var destinationPort = 3000;
+var listeningPort = 80,
+	destinationHost = "localhost",
+	destinationPort = 3000;
 
 var http = require('http'),
 	url = require('url');
@@ -10,7 +12,7 @@ http.createServer(function(req, res) {
 		hostName = req.headers.host;
 
 	var options = {
-		host: hostName,
+		host: (destinationHost != undefined) ? destinationHost : hostName,
 		port: destinationPort,
 		path: req.url,
 		method: method
@@ -35,6 +37,8 @@ http.createServer(function(req, res) {
 		});
 
 	});
-}).listen(80);
+}).listen(listeningPort);
 
-console.log('Server is started.');
+console.log('### Proxy started');
+console.log('    Listening on port ' + listeningPort);
+console.log('    Proxying request to port ' + destinationPort);
