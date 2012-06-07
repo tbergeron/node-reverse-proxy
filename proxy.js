@@ -1,40 +1,40 @@
+// Config
+// todo : make a configuration file
+
 var listeningPort = 80,
 	destinationHost = 'localhost',
 	destinationPort = 3000;
 
+// Main app
 var http = require('http'),
-	url = require('url');
+	url = require('url'),
+	request = require('request');
 
 http.createServer(function(req, res) {
+
 	console.log('### Received request.\n-');
 
 	var method = req.method,
-		hostName = req.headers.host;
+		hostName = (destinationHost != undefined) ? destinationHost : req.headers.host;
 
 	var options = {
-		host: (destinationHost != undefined) ? destinationHost : hostName,
-		port: destinationPort,
-		path: req.url,
-		method: method
+		url: 'http://' + hostName + ':' + destinationPort + req.url,
+		method: method,
+		followAllRedirects: true
 	};
 
 	console.log('Options: ' + JSON.stringify(options));
 
-	var proxiedRequest = http.get(options, function(proxiedResponse) {
-		console.log('\nStatus Code: ' + res.statusCode);
-		console.log('\nHeaders: ' + JSON.stringify(proxiedResponse.headers));
+	var proxiedRequest = request(options, function(error, response, body) {
+		console.log('\nStatus Code: ' + response.statusCode + ', ');
+		console.log('\nHeaders: ' + JSON.stringify(response.headers));
 
-		proxiedResponse.setEncoding('utf8');
+		res.writeHead(res.statusCode, { 'Content-Type': response.headers['content-type'] });
 
-		res.writeHead(res.statusCode, { 'Content-Type': proxiedResponse.headers['content-type'] });
-
-		proxiedResponse.on('data', function(chunk) {
-			res.write(chunk);
-			res.end();
+		res.write(body);
+		res.end();
 	
-			console.log('-\n### Request has been handled.\n');
-		});
-
+	 	console.log('-\n### Request has been handled.\n');
 	});
 }).listen(listeningPort);
 
