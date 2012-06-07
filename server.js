@@ -4,16 +4,10 @@ var http = require('http'),
 	url = require('url');
 
 http.createServer(function(req, res) {
-	console.log("\n\n");
-	console.log("Received request.");
+	console.log("### Received request.\n-");
 
 	var method = req.method,
-		hostName = req.headers.host,
-		uriInfos = url.parse(req.url, true);
-
-	// todo : set status code
-	// todo : set headers for response
-	// todo : write data
+		hostName = req.headers.host;
 
 	var options = {
 		host: hostName,
@@ -22,11 +16,12 @@ http.createServer(function(req, res) {
 		method: method
 	};
 
+	console.log("Options sent with request:");
 	console.log(options);
 
-	var proxiedRequest = http.request(options, function(proxiedResponse) {
-		console.log('STATUS: ' + res.statusCode);
-		console.log('HEADERS: ' + JSON.stringify(proxiedResponse.headers));
+	var proxiedRequest = http.get(options, function(proxiedResponse) {
+		console.log('\nStatus Code: ' + res.statusCode);
+		console.log('\nHeaders: ' + JSON.stringify(proxiedResponse.headers));
 
 		proxiedResponse.setEncoding('utf8');
 
@@ -36,7 +31,7 @@ http.createServer(function(req, res) {
 			res.write(chunk);
 			res.end();
 	
-			console.log("\n\n");
+			console.log("-\n### Request has been handled.\n");
 		});
 
 	});
