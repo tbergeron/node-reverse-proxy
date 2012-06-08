@@ -1,78 +1,78 @@
 /* Notes:
-	- only ONE vhost is supported at the moment
-	- sourcePort is not supported yet
+    - only ONE vhost is supported at the moment
+    - sourcePort is not supported yet
 */
 
 var http = require('http'),
-	request = require('request'),
+    request = require('request'),
     fs = require('fs'),
     configurationFilePath = 'vhosts.json',
     configuration = null;
 
 // Reading vhosts configuration file
 fs.stat(configurationFilePath, function(err) {
-	configuration = JSON.parse(fs.readFileSync(configurationFilePath, 'utf8'));
+    configuration = JSON.parse(fs.readFileSync(configurationFilePath, 'utf8'));
 
-	// Starting proxy
-	startProxy(
-		configuration[0].sourceHostName, 
-		configuration[0].destinationHostName, 
-		configuration[0].destinationPort,
-		configuration[0].debug
-	);
+    // Starting proxy
+    startProxy(
+        configuration[0].sourceHostName, 
+        configuration[0].destinationHostName, 
+        configuration[0].destinationPort, 
+        configuration[0].debug
+    );
 });
 
 // todo : find a way to handle multiple proxy at a time (multiple listener on port 80)
 var startProxy = function(sourceHostName, destinationHostName, destinationPort, debug) {
-	http.createServer(function(req, res) {
-		if (req.headers.host == sourceHostName) {
-			// Start execution timer
-			var requestTimer = new ExecutionTimer();
-			requestTimer.startTimer();
+        http.createServer(function(req, res) {
+            if (req.headers.host == sourceHostName) {
+                // Start execution timer
+                var requestTimer = new ExecutionTimer();
+                requestTimer.startTimer();
 
-			if (debug) console.log('\n### Received request: ' + req.url + '.\n');
+                if (debug) console.log('\n### Received request: ' + req.url + '.\n');
 
-			var options = {
-				url: 'http://' + destinationHostName + ':' + destinationPort + req.url,
-				method: req.method,
-				followAllRedirects: true
-			};
+                var options = {
+                    url: 'http://' + destinationHostName + ':' + destinationPort + req.url,
+                    method: req.method,
+                    followAllRedirects: true
+                };
 
-			if (debug) console.log('Options: ' + JSON.stringify(options));
+                if (debug) console.log('Options: ' + JSON.stringify(options));
 
-			var proxiedRequest = request(options, function(error, response, body) {
-				if (debug) console.log('Status Code: ' + response.statusCode + '\n');
-				if (debug) console.log('Headers: ' + JSON.stringify(response.headers) + '\n');
+                var proxiedRequest = request(options, function(error, response, body) {
+                    if (debug) console.log('Status Code: ' + response.statusCode + '\n');
+                    if (debug) console.log('Headers: ' + JSON.stringify(response.headers) + '\n');
 
-				res.writeHead(res.statusCode, { 'Content-Type': response.headers['content-type'] });
-				res.write(body);
-				res.end();
+                    res.writeHead(res.statusCode, { 'Content-Type': response.headers['content-type'] });
+                    res.write(body);
+                    res.end();
 
-				requestTimer.stopTimer();
-			
-			 	console.log('### Request handled in ' + requestTimer.getExecutionTime() + 'ms. (' + req.url + ')');
-			});
-		}
-	}).listen(80);
+                    requestTimer.stopTimer();
 
-	console.log('### Proxy started');
-	console.log('    Listening on port 80');
-	console.log('    Proxying request to port ' + destinationPort + '\n');
-};
+                    console.log('### Request handled in ' + requestTimer.getExecutionTime() + 'ms. (' + req.url + ')');
+                });
+            }
+        }).listen(80);
 
-var ExecutionTimer = function(){
-	this.startTime = null;
-	this.endTime = null;
+        console.log('### Proxy started');
+        console.log('    Listening on port 80');
+        console.log('    Proxying request to port ' + destinationPort + '\n');
+    };
 
-	this.startTimer = function(){
-		this.startTime = +new Date();
-	}
+var ExecutionTimer = function() {
+        this.startTime = null;
+        this.endTime = null;
 
-	this.stopTimer = function(){
-		this.endTime = +new Date();
-	}
+        this.startTimer = function() {
+            this.startTime = new Date();
+        }
 
-	this.getExecutionTime = function(){
-		return this.endTime - this.startTime;
-	}
-}
+        this.stopTimer = function() {
+            this.endTime = new Date();
+        }
+
+        this.getExecutionTime = function() {
+            return this.endTime - this.startTime;
+        }
+    }
