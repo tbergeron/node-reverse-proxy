@@ -1,3 +1,8 @@
+/* Notes:
+	- only ONE vhost is supported at the moment
+	- sourcePort is not supported yet
+*/
+
 var http = require('http'),
 	request = require('request'),
     fs = require('fs');
@@ -9,6 +14,7 @@ fs.stat(configurationFilePath, function(err) {
 	var content = fs.readFileSync(configurationFilePath, 'utf8'),
 		contentJson = JSON.parse(content);
 
+	// starting proxy
 	startProxy(
 		contentJson[0].sourceHostName, 
 		contentJson[0].destinationHostName, 
