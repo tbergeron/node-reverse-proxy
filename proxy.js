@@ -28,7 +28,6 @@ var startProxy = function(sourceHostName, destinationHostName, destinationPort, 
             if (req.headers.host == sourceHostName) {
                 // Start execution timer
                 var requestTimer = new ExecutionTimer();
-                requestTimer.startTimer();
 
                 if (debug) console.log('\n### Received request: ' + req.url + '.\n');
 
@@ -48,8 +47,6 @@ var startProxy = function(sourceHostName, destinationHostName, destinationPort, 
                     res.write(body);
                     res.end();
 
-                    requestTimer.stopTimer();
-
                     console.log('### Request handled in ' + requestTimer.getExecutionTime() + 'ms. (' + req.url + ')');
                 });
             }
@@ -61,18 +58,9 @@ var startProxy = function(sourceHostName, destinationHostName, destinationPort, 
     };
 
 var ExecutionTimer = function() {
-        this.startTime = null;
-        this.endTime = null;
+    this.startTime = new Date();
 
-        this.startTimer = function() {
-            this.startTime = new Date();
-        }
-
-        this.stopTimer = function() {
-            this.endTime = new Date();
-        }
-
-        this.getExecutionTime = function() {
-            return this.endTime - this.startTime;
-        }
+    this.getExecutionTime = function() {
+        return new Date() - this.startTime;
     }
+}
