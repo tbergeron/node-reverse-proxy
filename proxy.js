@@ -5,28 +5,32 @@
 
 var http = require('http'),
 	request = require('request'),
-    fs = require('fs');
-
-var configurationFilePath = 'vhosts.json';
+    fs = require('fs'),
+    configurationFilePath = 'vhosts.json',
+    configuration = null;
 
 // Reading vhosts configuration file
 fs.stat(configurationFilePath, function(err) {
-	var content = fs.readFileSync(configurationFilePath, 'utf8'),
-		contentJson = JSON.parse(content);
+	configuration = JSON.parse(fs.readFileSync(configurationFilePath, 'utf8'));
 
-	// starting proxy
+	// Starting proxy
 	startProxy(
-		contentJson[0].sourceHostName, 
-		contentJson[0].destinationHostName, 
-		contentJson[0].destinationPort
+		configuration[0].sourceHostName, 
+		configuration[0].destinationHostName, 
+		configuration[0].destinationPort,
+		configuration[0].debug
 	);
 });
 
 // todo : find a way to handle multiple proxy at a time (multiple listener on port 80)
-var startProxy = function(sourceHostName, destinationHostName, destinationPort) {
+var startProxy = function(sourceHostName, destinationHostName, destinationPort, debug) {
 	http.createServer(function(req, res) {
 		if (req.headers.host == sourceHostName) {
-			console.log('### Received request.\n-');
+			// Start execution timer
+			var requestTimer = new ExecutionTimer();
+			requestTimer.startTimer();
+
+			if (debug) console.log('\n### Received request: ' + req.url + '.\n');
 
 			var options = {
 				url: 'http://' + destinationHostName + ':' + destinationPort + req.url,
@@ -34,22 +38,41 @@ var startProxy = function(sourceHostName, destinationHostName, destinationPort) 
 				followAllRedirects: true
 			};
 
-			console.log('Options: ' + JSON.stringify(options));
+			if (debug) console.log('Options: ' + JSON.stringify(options));
 
 			var proxiedRequest = request(options, function(error, response, body) {
-				console.log('\nStatus Code: ' + response.statusCode + ', ');
-				console.log('\nHeaders: ' + JSON.stringify(response.headers));
+				if (debug) console.log('Status Code: ' + response.statusCode + '\n');
+				if (debug) console.log('Headers: ' + JSON.stringify(response.headers) + '\n');
 
 				res.writeHead(res.statusCode, { 'Content-Type': response.headers['content-type'] });
 				res.write(body);
 				res.end();
+
+				requestTimer.stopTimer();
 			
-			 	console.log('-\n### Request has been handled.\n');
+			 	console.log('### Request handled in ' + requestTimer.getExecutionTime() + 'ms. (' + req.url + ')');
 			});
 		}
 	}).listen(80);
 
 	console.log('### Proxy started');
 	console.log('    Listening on port 80');
-	console.log('    Proxying request to port ' + destinationPort);
+	console.log('    Proxying request to port ' + destinationPort + '\n');
 };
+
+var ExecutionTimer = function(){
+	this.startTime = null;
+	this.endTime = null;
+
+	this.startTimer = function(){
+		this.startTime = +new Date();
+	}
+
+	this.stopTimer = function(){
+		this.endTime = +new Date();
+	}
+
+	this.getExecutionTime = function(){
+		return this.endTime - this.startTime;
+	}
+}
