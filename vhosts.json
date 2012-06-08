@@ -1,5 +1,4 @@
 [{
-  "name": "test vhost",
   "sourceHostName": "localhost",
   "destinationHostName" : "localhost",
   "destinationPort": 3000
