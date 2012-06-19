@@ -39,7 +39,7 @@ var startProxy = function(sourceHostName, destinationHostName, destinationPort, 
 
                 if (debug) console.log('Options: ' + JSON.stringify(options));
 
-                var proxiedRequest = request(options, function(error, response, body) {
+                request(options, function(error, response, body) {
                     if (debug) console.log('Status Code: ' + response.statusCode + '\n');
                     if (debug) console.log('Headers: ' + JSON.stringify(response.headers) + '\n');
 
